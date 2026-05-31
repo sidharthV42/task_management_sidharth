@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:task_management/screens/home_screen.dart';
 
 import 'login_screen.dart';
@@ -171,7 +172,14 @@ class _CreateAccountState extends State<CreateAccount> {
                     onTap: (){
                       print("tapped Create Account");
                       if(create_key.currentState!.validate()){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+                        // Save login state to authBox
+                        final authBox = Hive.box("authBox");
+                        authBox.put("isLoggedIn", true);
+                        
+                        Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const HomeScreen())
+                        );
                       }
                     },
                     child: Container(
@@ -211,7 +219,14 @@ class _CreateAccountState extends State<CreateAccount> {
                     child: InkWell(
                       onTap: (){
                         print("tapped Sign in with GOOGLE");
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+                        // Save login state to authBox
+                        final authBox = Hive.box("authBox");
+                        authBox.put("isLoggedIn", true);
+                        
+                        Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const HomeScreen())
+                        );
                       },
                       child: Container(
                         width: double.infinity,
@@ -236,7 +251,14 @@ class _CreateAccountState extends State<CreateAccount> {
                     child: InkWell(
                       onTap: (){
                         print("tapped Sign in with APPLE");
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+                        // Save login state to authBox
+                        final authBox = Hive.box("authBox");
+                        authBox.put("isLoggedIn", true);
+                        
+                        Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const HomeScreen())
+                        );
                       },
                       child: Container(
                         width: double.infinity,
