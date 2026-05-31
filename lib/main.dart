@@ -10,8 +10,33 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late Box authBox;
+
+  @override
+  void initState() {
+    super.initState();
+    authBox = Hive.box("authBox");
+    // Listen to changes in authBox
+    authBox.listenable().addListener(_updateUI);
+  }
+
+  void _updateUI() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    authBox.listenable().removeListener(_updateUI);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +49,6 @@ class MyApp extends StatelessWidget {
 
   // Check if user is logged in
   Widget _getHomeScreen() {
-    final authBox = Hive.box("authBox");
     bool isLoggedIn = authBox.get("isLoggedIn", defaultValue: false);
     
     if (isLoggedIn) {
