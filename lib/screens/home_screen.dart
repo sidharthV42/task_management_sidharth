@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:task_management/screens/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +31,16 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+  void logout() {
+    final box = Hive.box("myBox");
+    box.put("isLoggedIn", false);
+    
+    Navigator.pushReplacement(
+      context, 
+      MaterialPageRoute(builder: (context) => LoginScreen())
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dataList = myBox.values.toList();
@@ -39,6 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         title: const Text("Task Manager"),
+        actions: [
+          IconButton(
+            onPressed: logout,
+            icon: const Icon(Icons.logout),
+            tooltip: "Logout",
+          ),
+        ],
       ),
       body: Column(
         children: [
