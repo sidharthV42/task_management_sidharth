@@ -15,7 +15,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isClick = true;
   late TextEditingController emailController;
   late TextEditingController passwordController;
-  String? errorMessage;
 
   @override
   void initState() {
@@ -35,38 +34,42 @@ class _LoginScreenState extends State<LoginScreen> {
     if (login_key.currentState!.validate()) {
       final String email = emailController.text.trim();
       final String password = passwordController.text.trim();
-      
+
+      print("🔍 Attempting login with email: $email, password: $password");
+
       // Get the users database
       final usersBox = Hive.box("usersBox");
-      
+
+      print("📦 Total registered users: ${usersBox.length}");
+
       // Check if user exists with this email and password
       bool userExists = false;
       for (int i = 0; i < usersBox.length; i++) {
         final user = usersBox.getAt(i);
+        print("User $i: Email=${user['email']}, Password=${user['password']}");
         if (user['email'] == email && user['password'] == password) {
           userExists = true;
+          print("✅ Credentials match!");
           break;
         }
       }
-      
+
       if (userExists) {
+        print("✅ Login successful!");
         // Save login state
         final authBox = Hive.box("authBox");
         authBox.put("isLoggedIn", true);
         authBox.put("userEmail", email);
-        
+
         Navigator.pushReplacement(
           context, 
           MaterialPageRoute(builder: (context) => const HomeScreen())
         );
       } else {
-        // Show error message
-        setState(() {
-          errorMessage = "Invalid email or password";
-        });
+        print("❌ Invalid credentials!");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage!),
+            content: Text("Invalid email or password"),
             backgroundColor: Colors.red,
           ),
         );
@@ -77,7 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: Padding(
         padding: EdgeInsets.all(15),
         child: Form(
@@ -102,38 +104,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
               Row(
                 children: [
-                  Text("New here?",style: TextStyle(color: Colors.black)),
-                  TextButton(onPressed:(){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>CreateAccount()));
-                  }, child:Text("Create an account",style: TextStyle(color: Colors.deepPurple))
+                  Text("New here?", style: TextStyle(color: Colors.black)),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CreateAccount()));
+                    },
+                    child: Text("Create an account", style: TextStyle(color: Colors.deepPurple))
                   )
                 ],
               ),
 
-              Text("Email", style: TextStyle(color: Colors.black45),textAlign: TextAlign.left,),
+              Text("Email", style: TextStyle(color: Colors.black45), textAlign: TextAlign.left,),
 
               TextFormField(
                 controller: emailController,
-                validator: (String? value){
-                  if(value!.isEmpty){
+                validator: (String? value) {
+                  if (value!.isEmpty) {
                     return "Email is required";
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black45),
-                        borderRadius: BorderRadius.circular(7)
-                    ),
-                    hintText: "Email address",
-                    hintStyle: TextStyle(color: Colors.black45),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black45),
+                    borderRadius: BorderRadius.circular(7)
+                  ),
+                  hintText: "Email address",
+                  hintStyle: TextStyle(color: Colors.black45),
                 ),
               ),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Password", style: TextStyle(color: Colors.black45),textAlign: TextAlign.left,),
+                  Text("Password", style: TextStyle(color: Colors.black45), textAlign: TextAlign.left,),
                   TextButton(
                     onPressed: () {},
                     child: Text(
@@ -147,16 +151,16 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: passwordController,
                 obscureText: isClick,
-                validator: (String? value){
-                  if(value!.isEmpty){
+                validator: (String? value) {
+                  if (value!.isEmpty) {
                     return "Password is required";
                   }
                   return null;
                 },
                 decoration: InputDecoration(
                   enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black45),
-                      borderRadius: BorderRadius.circular(7)
+                    borderSide: BorderSide(color: Colors.black45),
+                    borderRadius: BorderRadius.circular(7)
                   ),
                   hintText: "Password",
                   hintStyle: TextStyle(color: Colors.black45),
@@ -177,21 +181,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 45,
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(7),
-                      color: Colors.deepPurple
+                    borderRadius: BorderRadius.circular(7),
+                    color: Colors.deepPurple
                   ),
                   child: Center(
-                    child: Text("Log in",style: TextStyle(color: Colors.white),),
+                    child: Text("Log in", style: TextStyle(color: Colors.white),),
                   ),
                 ),
               ),
 
-              Center(child: Text("OR", style: TextStyle(color: Colors.black45),textAlign: TextAlign.center,)),
+              Center(child: Text("OR", style: TextStyle(color: Colors.black45), textAlign: TextAlign.center,)),
 
               InkWell(
-                onTap: (){
+                onTap: () {
                   print("tapped Sign in with Google");
-                  // Save login state to authBox
                   final authBox = Hive.box("authBox");
                   authBox.put("isLoggedIn", true);
                   authBox.put("userEmail", "google_user");
@@ -205,14 +208,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 45,
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(color: Colors.black45),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(color: Colors.black45),
                   ),
                   child: Center(
                     child: Row(
                       children: [
-                        Image(image: AssetImage("assets/icons/google.png"),height: 60,),
-                        Text("Sign in with Google",style: TextStyle(color: Colors.deepPurple),),
+                        Image(image: AssetImage("assets/icons/google.png"), height: 60,),
+                        Text("Sign in with Google", style: TextStyle(color: Colors.deepPurple),),
                       ],
                     ),
                   ),
