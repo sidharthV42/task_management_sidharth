@@ -87,6 +87,9 @@ class _CreateAccountState extends State<CreateAccount> {
         'password': password,
       });
 
+      print("✅ Account created successfully!");
+      print("Email: $email, Password: $password");
+
       // Save login state
       final authBox = Hive.box("authBox");
       authBox.put("isLoggedIn", true);
