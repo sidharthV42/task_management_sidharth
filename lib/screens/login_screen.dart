@@ -13,6 +13,67 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final login_key = GlobalKey<FormState>();
   bool isClick = true;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _login() {
+    if (login_key.currentState!.validate()) {
+      final String email = emailController.text.trim();
+      final String password = passwordController.text.trim();
+      
+      // Get the users database
+      final usersBox = Hive.box("usersBox");
+      
+      // Check if user exists with this email and password
+      bool userExists = false;
+      for (int i = 0; i < usersBox.length; i++) {
+        final user = usersBox.getAt(i);
+        if (user['email'] == email && user['password'] == password) {
+          userExists = true;
+          break;
+        }
+      }
+      
+      if (userExists) {
+        // Save login state
+        final authBox = Hive.box("authBox");
+        authBox.put("isLoggedIn", true);
+        authBox.put("userEmail", email);
+        
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (context) => const HomeScreen())
+        );
+      } else {
+        // Show error message
+        setState(() {
+          errorMessage = "Invalid email or password";
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text("Email", style: TextStyle(color: Colors.black45),textAlign: TextAlign.left,),
 
               TextFormField(
+                controller: emailController,
                 validator: (String? value){
                   if(value!.isEmpty){
                     return "Email is required";
@@ -83,6 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               TextFormField(
+                controller: passwordController,
+                obscureText: isClick,
                 validator: (String? value){
                   if(value!.isEmpty){
                     return "Password is required";
@@ -96,39 +160,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   hintText: "Password",
                   hintStyle: TextStyle(color: Colors.black45),
+                  suffixIcon: IconButton(
+                    icon: Icon(isClick ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                    onPressed: () {
+                      setState(() {
+                        isClick = !isClick;
+                      });
+                    },
+                  ),
                 ),
               ),
 
-
-              // SizedBox(
-              //     width: double.infinity,
-              //     child: ElevatedButton(
-              //         style: ElevatedButton.styleFrom(
-              //             backgroundColor:Colors.deepPurple,
-              //             foregroundColor:Colors.white
-              //         ),
-              //         onPressed:(){
-              //           if(login_key.currentState!.validate()){
-              //             Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
-              //           }
-              //         }, child: Text("Log in")
-              //     )
-              // ),
-
               InkWell(
-                onTap: (){
-                  print("tapped Log in");
-                  if(login_key.currentState!.validate()){
-                    // Save login state to authBox
-                    final authBox = Hive.box("authBox");
-                    authBox.put("isLoggedIn", true);
-                    
-                    Navigator.pushReplacement(
-                      context, 
-                      MaterialPageRoute(builder: (context) => const HomeScreen())
-                    );
-                  }
-                },
+                onTap: _login,
                 child: Container(
                   width: double.infinity,
                   height: 45,
@@ -144,32 +188,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
               Center(child: Text("OR", style: TextStyle(color: Colors.black45),textAlign: TextAlign.center,)),
 
-              // SizedBox(
-              //     width: double.infinity,
-              //     child: ElevatedButton(
-              //         style: ElevatedButton.styleFrom(
-              //             backgroundColor:Colors.white,
-              //             foregroundColor:Colors.deepPurple,
-              //         ),
-              //         onPressed:(){
-              //           if(login_key.currentState!.validate()){
-              //             Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
-              //           }
-              //         }, child: Row(
-              //           children: [
-              //             Image(image: AssetImage("assets/icons/google.png"),height: 60,),
-              //             Text("Sign in with Google"),
-              //           ],
-              //         )
-              //     )
-              // ),
-
               InkWell(
                 onTap: (){
                   print("tapped Sign in with Google");
                   // Save login state to authBox
                   final authBox = Hive.box("authBox");
                   authBox.put("isLoggedIn", true);
+                  authBox.put("userEmail", "google_user");
                   
                   Navigator.pushReplacement(
                     context, 
