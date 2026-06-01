@@ -16,12 +16,102 @@ class _CreateAccountState extends State<CreateAccount> {
   bool isEnter = true;
   bool isTick = false;
 
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _createAccount() {
+    if (create_key.currentState!.validate()) {
+      if (!isTick) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Please agree to Terms & Conditions"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final String firstName = firstNameController.text.trim();
+      final String lastName = lastNameController.text.trim();
+      final String email = emailController.text.trim();
+      final String password = passwordController.text.trim();
+
+      // Get the users database
+      final usersBox = Hive.box("usersBox");
+
+      // Check if email already exists
+      bool emailExists = false;
+      for (int i = 0; i < usersBox.length; i++) {
+        final user = usersBox.getAt(i);
+        if (user['email'] == email) {
+          emailExists = true;
+          break;
+        }
+      }
+
+      if (emailExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Email already registered"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Save user credentials
+      usersBox.add({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'password': password,
+      });
+
+      // Save login state
+      final authBox = Hive.box("authBox");
+      authBox.put("isLoggedIn", true);
+      authBox.put("userEmail", email);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Account created successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding:EdgeInsets.all(15),
+          padding: EdgeInsets.all(15),
           child: SingleChildScrollView(
             child: Form(
               key: create_key,
@@ -45,10 +135,12 @@ class _CreateAccountState extends State<CreateAccount> {
 
                   Row(
                     children: [
-                      Text("Already have an account?",style: TextStyle(color: Colors.black)),
-                      TextButton(onPressed:(){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginScreen()));
-                      }, child:Text("Log in",style: TextStyle(color: Colors.deepPurple))
+                      Text("Already have an account?", style: TextStyle(color: Colors.black)),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                        },
+                        child: Text("Log in", style: TextStyle(color: Colors.deepPurple)),
                       )
                     ],
                   ),
@@ -59,6 +151,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     children: [
                       Expanded(
                         child: TextFormField(
+                          controller: firstNameController,
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
                               return "First Name is required";
@@ -66,18 +159,18 @@ class _CreateAccountState extends State<CreateAccount> {
                             return null;
                           },
                           decoration: InputDecoration(
-                              enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black45),
-                                  borderRadius: BorderRadius.circular(7)
-                              ),
-                              hintText: "First Name",
-                              hintStyle: TextStyle(color: Colors.black45),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black45),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            hintText: "First Name",
+                            hintStyle: TextStyle(color: Colors.black45),
                           ),
                         ),
                       ),
-
                       Expanded(
                         child: TextFormField(
+                          controller: lastNameController,
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
                               return "Last Name is required";
@@ -85,63 +178,69 @@ class _CreateAccountState extends State<CreateAccount> {
                             return null;
                           },
                           decoration: InputDecoration(
-                              enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black45),
-                                  borderRadius: BorderRadius.circular(7)
-                              ),
-                              hintText: "Last Name",
-                              hintStyle: TextStyle(color: Colors.black45),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black45),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            hintText: "Last Name",
+                            hintStyle: TextStyle(color: Colors.black45),
                           ),
                         ),
                       ),
                     ],
                   ),
                   TextFormField(
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return "Email is required";
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black45),
-                              borderRadius: BorderRadius.circular(7)
-                          ),
-                          hintText: "Email",
-                          hintStyle: TextStyle(color: Colors.black45),
-                      )
+                    controller: emailController,
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Email is required";
+                      }
+                      if (!value.contains("@")) {
+                        return "Enter a valid email";
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black45),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      hintText: "Email",
+                      hintStyle: TextStyle(color: Colors.black45),
+                    ),
                   ),
-
                   TextFormField(
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return "Password is required";
-                        }
-                        return null;
-                      },
-                      obscureText: isEnter,
-                      decoration: InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black45),
-                            borderRadius: BorderRadius.circular(7)
-                        ),
-                        hintText: "Enter your password",
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              isEnter = !isEnter;
-                            });
-                          },
-                          icon: Icon(isEnter
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
-                        ),
-                        suffixIconColor: Colors.black45,
-                        hintStyle: TextStyle(color: Colors.black45),
-                      )
+                    controller: passwordController,
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Password is required";
+                      }
+                      if (value.length < 6) {
+                        return "Password must be at least 6 characters";
+                      }
+                      return null;
+                    },
+                    obscureText: isEnter,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black45),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      hintText: "Enter your password",
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isEnter = !isEnter;
+                          });
+                        },
+                        icon: Icon(isEnter
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined),
+                      ),
+                      suffixIconColor: Colors.black45,
+                      hintStyle: TextStyle(color: Colors.black45),
+                    ),
                   ),
-
                   Row(
                     children: [
                       IconButton(
@@ -151,12 +250,10 @@ class _CreateAccountState extends State<CreateAccount> {
                           });
                         },
                         icon: isTick
-                            ? Icon(Icons.check_box_outline_blank, color: Colors.grey)
-                            : Icon(Icons.check_box_outlined, color: Colors.deepPurple),
+                            ? Icon(Icons.check_box_outlined, color: Colors.deepPurple)
+                            : Icon(Icons.check_box_outline_blank, color: Colors.grey),
                       ),
-
-                      Text(" I agree to the", style: TextStyle(color: Colors.black45),),
-
+                      Text(" I agree to the", style: TextStyle(color: Colors.black45)),
                       TextButton(
                         onPressed: () {},
                         child: Text(
@@ -164,157 +261,88 @@ class _CreateAccountState extends State<CreateAccount> {
                           style: TextStyle(color: Colors.deepPurple),
                         ),
                       ),
-
                     ],
                   ),
-
                   InkWell(
-                    onTap: (){
-                      print("tapped Create Account");
-                      if(create_key.currentState!.validate()){
-                        // Save login state to authBox
-                        final authBox = Hive.box("authBox");
-                        authBox.put("isLoggedIn", true);
-                        
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => const HomeScreen())
-                        );
-                      }
-                    },
+                    onTap: _createAccount,
                     child: Container(
                       width: double.infinity,
                       height: 45,
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7),
-                          color: Colors.deepPurple
+                        borderRadius: BorderRadius.circular(7),
+                        color: Colors.deepPurple,
                       ),
                       child: Center(
-                        child: Text("Create Account",style: TextStyle(color: Colors.white),),
+                        child: Text("Create Account", style: TextStyle(color: Colors.white)),
                       ),
                     ),
                   ),
-
-                  // SizedBox(
-                  //     width: double.infinity,
-                  //     child: ElevatedButton(
-                  //         style: ElevatedButton.styleFrom(
-                  //             backgroundColor:Colors.deepPurple,
-                  //             foregroundColor:Colors.white
-                  //         ),
-                  //         onPressed:(){
-                  //           if(create_key.currentState!.validate()){
-                  //             Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
-                  //           }
-                  //         }, child: Text("Create Account")
-                  //     )
-                  // ),
-
-                  Center(child: Text("Or register with", style: TextStyle(color: Colors.black45),textAlign: TextAlign.center,)),
-
-              Row(
-                spacing: 15,
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: (){
-                        print("tapped Sign in with GOOGLE");
-                        // Save login state to authBox
-                        final authBox = Hive.box("authBox");
-                        authBox.put("isLoggedIn", true);
-                        
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => const HomeScreen())
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7),
-                          border: Border.all(color: Colors.black45),
-                        ),
-                        child: Center(
-                          child: Row(
-                            children: [
-                              Image(image: AssetImage("assets/icons/google.png"),height: 60,),
-                              Text("Sign in with Google",style: TextStyle(color: Colors.deepPurple),),
-                            ],
+                  Center(child: Text("Or register with", style: TextStyle(color: Colors.black45))),
+                  Row(
+                    spacing: 15,
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            print("tapped Sign in with GOOGLE");
+                            final authBox = Hive.box("authBox");
+                            authBox.put("isLoggedIn", true);
+                            authBox.put("userEmail", "google_user");
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: Colors.black45),
+                            ),
+                            child: Center(
+                              child: Row(
+                                children: [
+                                  Image(image: AssetImage("assets/icons/google.png"), height: 60),
+                                  Text("Sign in with Google", style: TextStyle(color: Colors.deepPurple)),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-
-                  Expanded(
-                    child: InkWell(
-                      onTap: (){
-                        print("tapped Sign in with APPLE");
-                        // Save login state to authBox
-                        final authBox = Hive.box("authBox");
-                        authBox.put("isLoggedIn", true);
-                        
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => const HomeScreen())
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7),
-                          border: Border.all(color: Colors.black45),
-                        ),
-                        child: Center(
-                          child: Row(
-                            children: [
-                              Image(image: AssetImage("assets/icons/apple.png"),height: 60,),
-                              Text("Sign in with Apple",style: TextStyle(color: Colors.deepPurple),),
-                            ],
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            print("tapped Sign in with APPLE");
+                            final authBox = Hive.box("authBox");
+                            authBox.put("isLoggedIn", true);
+                            authBox.put("userEmail", "apple_user");
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: Colors.black45),
+                            ),
+                            child: Center(
+                              child: Row(
+                                children: [
+                                  Image(image: AssetImage("assets/icons/apple.png"), height: 60),
+                                  Text("Sign in with Apple", style: TextStyle(color: Colors.deepPurple)),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  // Expanded(
-                  //   child: SizedBox(
-                  //       width: double.infinity,
-                  //       child: ElevatedButton(
-                  //           style: ElevatedButton.styleFrom(
-                  //             backgroundColor:Colors.white,
-                  //             foregroundColor:Colors.deepPurple,
-                  //           ),
-                  //           onPressed:(){}, child: Row(
-                  //         children: [
-                  //           Image(image: AssetImage("assets/icons/google.png"),height: 60,),
-                  //           Text("Sign in with Google"),
-                  //         ],
-                  //       )
-                  //       )
-                  //   ),
-                  // ),
-                  //
-                  // Expanded(
-                  //   child: SizedBox(
-                  //       width: double.infinity,
-                  //       child: ElevatedButton(
-                  //           style: ElevatedButton.styleFrom(
-                  //             backgroundColor:Colors.white,
-                  //             foregroundColor:Colors.deepPurple,
-                  //           ),
-                  //           onPressed:(){}, child: Row(
-                  //         children: [
-                  //           Image(image: AssetImage("assets/icons/apple.png"),height: 60,),
-                  //           Text("Sign in with Apple"),
-                  //         ],
-                  //       )
-                  //       )
-                  //   ),
-                  // ),
-                ],
-              ),
                 ],
               ),
             ),
