@@ -7,6 +7,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.openBox("myBox"); // For tasks
   await Hive.openBox("authBox"); // For authentication
+  await Hive.openBox("usersBox"); // For user credentials
   runApp(const MyApp());
 }
 
