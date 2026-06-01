@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:task_management/screens/create_account.dart';
 import 'package:task_management/screens/home_screen.dart';
 
@@ -118,7 +119,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: (){
                   print("tapped Log in");
                   if(login_key.currentState!.validate()){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+                    // Save login state to authBox
+                    final authBox = Hive.box("authBox");
+                    authBox.put("isLoggedIn", true);
+                    
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const HomeScreen())
+                    );
                   }
                 },
                 child: Container(
@@ -159,7 +167,14 @@ class _LoginScreenState extends State<LoginScreen> {
               InkWell(
                 onTap: (){
                   print("tapped Sign in with Google");
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+                  // Save login state to authBox
+                  final authBox = Hive.box("authBox");
+                  authBox.put("isLoggedIn", true);
+                  
+                  Navigator.pushReplacement(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const HomeScreen())
+                  );
                 },
                 child: Container(
                   width: double.infinity,
