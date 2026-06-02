@@ -1,61 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:task_management/screens/login_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:task_management/screens/create_account.dart';
 import 'package:task_management/screens/home_screen.dart';
+import 'package:task_management/screens/login_screen.dart';
+import 'package:task_management/screens/splash_screen.dart';
 
-void main() async {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.openBox("myBox"); // For tasks
-  await Hive.openBox("authBox"); // For authentication
-  await Hive.openBox("usersBox"); // For user credentials
+  await Hive.initFlutter();
+  await Hive.openBox("myBox");
+   await Hive.openBox("authBox");
+   await Hive.openBox("usersBox");
   runApp(const MyApp());
 }
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
-
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
 class _MyAppState extends State<MyApp> {
   late Box authBox;
-
   @override
-  void initState() {
+  void initState(){
     super.initState();
-    authBox = Hive.box("authBox");
-    // Listen to changes in authBox
+    authBox=Hive.box("authBox");
     authBox.listenable().addListener(_updateUI);
   }
+  void _updateUI(){
+    setState(() {
 
-  void _updateUI() {
-    setState(() {});
+    });
   }
-
   @override
-  void dispose() {
+  void dispose(){
     authBox.listenable().removeListener(_updateUI);
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'My Task Manager',
-      home: _getHomeScreen(),
+      debugShowCheckedModeBanner:!true,
+      title: 'Task Manager',
+      home: const SplashScreen(),
+      theme: ThemeData(primarySwatch: Colors.blue),
     );
-  }
-
-  // Check if user is logged in
-  Widget _getHomeScreen() {
-    bool isLoggedIn = authBox.get("isLoggedIn", defaultValue: false);
-    
-    if (isLoggedIn) {
-      return const HomeScreen();
-    } else {
-      return LoginScreen();
-    }
   }
 }
