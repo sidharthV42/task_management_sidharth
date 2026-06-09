@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:task_management/screens/login_screen.dart';
-
+import 'login_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController controller = TextEditingController();
   final Box myBox = Hive.box("myBox");
-
   void addData() {
     if (controller.text.isNotEmpty) {
       myBox.add(controller.text);
@@ -20,36 +16,31 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
     }
   }
-
   void deleteData(int index) {
     myBox.deleteAt(index);
     setState(() {});
   }
-
   void editData(int index, String newValue) {
     myBox.putAt(index, newValue);
     setState(() {});
   }
-
   void logout() {
-    final box = Hive.box("myBox");
-    box.put("isLoggedIn", false);
-    
+    final authBox = Hive.box("authBox");
+    authBox.put("isLoggedIn", false);
+
     Navigator.pushReplacement(
-      context, 
-      MaterialPageRoute(builder: (context) => LoginScreen())
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen())
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final dataList = myBox.values.toList();
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        title: const Text("Task Manager"),
+        title: const Text("Write it"),
         actions: [
           IconButton(
             onPressed: logout,
@@ -69,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     controller: controller,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: "Tasks 🔨",
+                      labelText: "Write things",
                     ),
                   ),
                 ),
